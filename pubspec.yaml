@@ -1,0 +1,88 @@
+name: finance_tracker
+description: "PocketPilot — a modern, offline-first personal finance tracker."
+publish_to: 'none'
+
+# version: <marketing-version>+<build-number>
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # ── State management ────────────────────────────────────────────────────────
+  flutter_riverpod: ^3.4.2
+
+  # ── Navigation ──────────────────────────────────────────────────────────────
+  go_router: ^17.4.0
+
+  # ── Networking ──────────────────────────────────────────────────────────────
+  dio: ^5.11.0
+  connectivity_plus: ^7.3.1
+
+  # ── Models / serialization ──────────────────────────────────────────────────
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
+
+  # ── Local persistence ───────────────────────────────────────────────────────
+  # `isar_community` is the actively maintained fork of Isar 3.x.
+  isar_community: ^3.3.2
+  isar_community_flutter_libs: ^3.3.2
+  flutter_secure_storage: ^10.3.1
+  shared_preferences: ^2.5.5
+  path_provider: ^2.1.6
+
+  # ── UI / UX ─────────────────────────────────────────────────────────────────
+  flutter_animate: ^4.5.2
+  fl_chart: ^1.2.0
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  lottie: ^3.5.1
+
+  # ── i18n ────────────────────────────────────────────────────────────────────
+  easy_localization: ^3.0.8
+  intl: ^0.20.2
+
+  # ── Misc ────────────────────────────────────────────────────────────────────
+  logger: ^2.7.0
+  uuid: ^4.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # ── Code generation ─────────────────────────────────────────────────────────
+  build_runner: ^2.15.1
+  freezed: ^3.2.5
+  json_serializable: ^6.14.1
+  isar_community_generator: ^3.3.2
+
+  # ── Testing ─────────────────────────────────────────────────────────────────
+  mocktail: ^1.0.5
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/lottie/
+    - assets/translations/
+
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/PlusJakartaSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlusJakartaSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlusJakartaSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
+          weight: 800
