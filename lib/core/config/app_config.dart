@@ -13,6 +13,7 @@ class AppConfig {
     required this.apiBaseUrl,
     required this.enableLogging,
     required this.enableCrashReporting,
+    this.useLocalBackend = false,
     this.connectTimeout = const Duration(seconds: 20),
     this.receiveTimeout = const Duration(seconds: 30),
     this.sendTimeout = const Duration(seconds: 30),
@@ -23,6 +24,15 @@ class AppConfig {
   final String apiBaseUrl;
   final bool enableLogging;
   final bool enableCrashReporting;
+
+  /// When `true` the app satisfies auth and sync from the on-device Isar
+  /// database instead of the REST API.
+  ///
+  /// This is what lets the whole product be demoed — and every screen be
+  /// exercised — without a running server. The repositories choose their data
+  /// source from this flag, so the REST path stays fully implemented and one
+  /// build argument switches to it.
+  final bool useLocalBackend;
   final Duration connectTimeout;
   final Duration receiveTimeout;
   final Duration sendTimeout;
@@ -37,6 +47,7 @@ class AppConfig {
     apiBaseUrl: 'https://dev.api.pocketpilot.app/v1',
     enableLogging: true,
     enableCrashReporting: false,
+    useLocalBackend: true,
   );
 
   static const AppConfig staging = AppConfig(

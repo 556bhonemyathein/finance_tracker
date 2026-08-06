@@ -6,7 +6,10 @@ import 'app_exception.dart';
 /// [Failure] carrying a message that is safe and friendly to show a user.
 /// Modelled as a sealed class so `switch` over failures is exhaustive — the
 /// compiler tells us when a new failure type needs UI handling.
-sealed class Failure {
+///
+/// Implements `Exception` so a repository can rethrow a failure it received
+/// from a nested call without unwrapping and re-wrapping it.
+sealed class Failure implements Exception {
   const Failure(this.message, {this.debugMessage});
 
   /// User-facing, already-friendly text.

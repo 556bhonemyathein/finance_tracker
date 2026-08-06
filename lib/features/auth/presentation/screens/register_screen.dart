@@ -1,0 +1,240 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/errors/failure.dart';
+import '../../../../core/extensions/extensions.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_feedback.dart';
+import '../../../../core/widgets/app_text_field.dart';
+import '../providers/auth_providers.dart';
+
+/// Account creation.
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+  final TextEditingController _confirm = TextEditingController();
+
+  bool _submitting = false;
+  Map<String, List<String>> _fieldErrors = <String, List<String>>{};
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _password.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    context.unfocus();
+
+    setState(() {
+      _submitting = true;
+      _fieldErrors = <String, List<String>>{};
+    });
+
+    final Failure? failure = await ref
+        .read(authProvider.notifier)
+        .register(
+          name: _name.text.trim(),
+          email: _email.text.trim(),
+          password: _password.text,
+        );
+
+    if (!mounted) return;
+    setState(() {
+      _submitting = false;
+      if (failure is ValidationFailure) _fieldErrors = failure.fieldErrors;
+    });
+
+    if (failure != null && failure is! ValidationFailure) {
+      AppFeedback.error(context, failure);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create account')),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.page),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: context.contentMaxWidth),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Start tracking in under a minute.',
+                      style: context.text.bodyMedium?.copyWith(
+                        color: context.colors.onSurfaceVariant,
+                      ),
+                    ),
+                    AppSpacing.xxl.gapH,
+
+                    AppTextField(
+                      controller: _name,
+                      label: 'Full name',
+                      hint: 'Ada Lovelace',
+                      prefixIcon: Icons.person_outline_rounded,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const <String>[AutofillHints.name],
+                      errorText: _fieldErrors['name']?.firstOrNull,
+                      validator: (String? value) =>
+                          (value ?? '').trim().length >= 2
+                          ? null
+                          : 'Enter your name',
+                    ),
+                    AppSpacing.lg.gapH,
+
+                    AppTextField(
+                      controller: _email,
+                      label: 'Email',
+                      hint: 'you@example.com',
+                      prefixIcon: Icons.mail_outline_rounded,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const <String>[AutofillHints.email],
+                      errorText: _fieldErrors['email']?.firstOrNull,
+                      validator: (String? value) =>
+                          (value ?? '').isValidEmail
+                          ? null
+                          : 'Enter a valid email address',
+                    ),
+                    AppSpacing.lg.gapH,
+
+                    AppTextField(
+                      controller: _password,
+                      label: 'Password',
+                      hint: 'At least 8 characters',
+                      prefixIcon: Icons.lock_outline_rounded,
+                      obscureText: true,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const <String>[
+                        AutofillHints.newPassword,
+                      ],
+                      errorText: _fieldErrors['password']?.firstOrNull,
+                      onChanged: (_) => setState(() {}),
+                      validator: (String? value) =>
+                          (value ?? '').isStrongPassword
+                          ? null
+                          : 'Use 8+ characters with a letter and a number',
+                    ),
+                    AppSpacing.sm.gapH,
+                    _PasswordStrength(password: _password.text),
+                    AppSpacing.lg.gapH,
+
+                    AppTextField(
+                      controller: _confirm,
+                      label: 'Confirm password',
+                      prefixIcon: Icons.lock_reset_rounded,
+                      obscureText: true,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                      validator: (String? value) => value == _password.text
+                          ? null
+                          : 'Passwords do not match',
+                    ),
+                    AppSpacing.xxl.gapH,
+
+                    AppButton(
+                      label: 'Create account',
+                      isLoading: _submitting,
+                      onPressed: _submit,
+                    ),
+                    AppSpacing.lg.gapH,
+                    Text(
+                      'By continuing you agree to our Terms and Privacy Policy.',
+                      textAlign: TextAlign.center,
+                      style: context.text.labelSmall?.copyWith(
+                        color: context.colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ).animate().fadeIn(duration: 300.ms),
+        ),
+      ),
+    );
+  }
+}
+
+/// Live strength meter.
+///
+/// Feedback while typing beats an error after submitting: the user can fix the
+/// problem before they ever hit a validation message.
+class _PasswordStrength extends StatelessWidget {
+  const _PasswordStrength({required this.password});
+
+  final String password;
+
+  int get _score {
+    if (password.isEmpty) return 0;
+    var score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (RegExp(r'[A-Z]').hasMatch(password) &&
+        RegExp(r'[a-z]').hasMatch(password)) {
+      score++;
+    }
+    if (RegExp(r'\d').hasMatch(password)) score++;
+    if (RegExp(r'[^A-Za-z0-9]').hasMatch(password)) score++;
+    return score;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (password.isEmpty) return const SizedBox.shrink();
+
+    final int score = _score;
+    final (String label, Color color) = switch (score) {
+      <= 1 => ('Weak', context.finance.expense),
+      2 || 3 => ('Fair', context.finance.savings),
+      _ => ('Strong', context.finance.income),
+    };
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: TweenAnimationBuilder<double>(
+              duration: 250.ms,
+              tween: Tween<double>(begin: 0, end: score / 5),
+              builder: (BuildContext context, double value, _) =>
+                  LinearProgressIndicator(
+                    value: value,
+                    minHeight: 5,
+                    color: color,
+                    backgroundColor: context.colors.outlineVariant,
+                  ),
+            ),
+          ),
+        ),
+        AppSpacing.md.gapW,
+        Text(
+          label,
+          style: context.text.labelSmall?.copyWith(color: color),
+        ),
+      ],
+    );
+  }
+}

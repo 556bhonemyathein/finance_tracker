@@ -35,6 +35,10 @@ linter:
     unnecessary_statements: true
 
     # ── Style / readability ───────────────────────────────────────────────────
+    # Off by design: constructors take named public parameters and assign them
+    # to private fields. Dart forbids `this._field` in a named parameter, so
+    # this lint has no satisfiable fix for that (very common) DI shape.
+    prefer_initializing_formals: false
     always_use_package_imports: false # relative imports inside lib/ are fine
     directives_ordering: true
     prefer_single_quotes: true
