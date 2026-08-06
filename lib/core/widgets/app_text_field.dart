@@ -4,6 +4,56 @@ import 'package:flutter/services.dart';
 import '../extensions/extensions.dart';
 import '../theme/app_dimens.dart';
 
+/// Keeps a text field to a well-formed decimal amount.
+///
+/// It *sanitises* rather than rejects: a naive
+/// `FilteringTextInputFormatter.allow` anchored with `^` silently truncates a
+/// pasted "12ab.99" to "12", losing the pence. This keeps every digit, the
+/// first decimal point only, and at most two decimal places — so paste,
+/// autofill and OCR'd amounts all behave.
+class DecimalInputFormatter extends TextInputFormatter {
+  const DecimalInputFormatter({this.decimalPlaces = 2});
+
+  final int decimalPlaces;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final StringBuffer buffer = StringBuffer();
+    var seenDot = false;
+    var decimals = 0;
+
+    for (final String char in newValue.text.split('')) {
+      if (char == '.' || char == ',') {
+        // Accept a comma as a decimal separator, but only the first one.
+        if (seenDot || buffer.isEmpty) continue;
+        seenDot = true;
+        buffer.write('.');
+        continue;
+      }
+      if (char.codeUnitAt(0) < 0x30 || char.codeUnitAt(0) > 0x39) continue;
+      if (seenDot) {
+        if (decimals >= decimalPlaces) continue;
+        decimals++;
+      }
+      buffer.write(char);
+    }
+
+    final String text = buffer.toString();
+    if (text == newValue.text) return newValue;
+
+    // Keep the caret at the end of the sanitised text; trying to preserve the
+    // original offset after removing characters is what produces the classic
+    // "cursor jumps to the middle" bug.
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
 /// The app's one text field.
 ///
 /// Wraps [TextFormField] to standardise label placement, error rendering and
@@ -50,9 +100,7 @@ class AppTextField extends StatefulWidget {
     errorText: errorText,
     onChanged: onChanged,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    inputFormatters: <TextInputFormatter>[
-      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
-    ],
+    inputFormatters: const <TextInputFormatter>[DecimalInputFormatter()],
     prefixIcon: null,
     suffix: prefixText == null ? null : Text(prefixText),
   );
