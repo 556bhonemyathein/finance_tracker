@@ -1,56 +1,175 @@
-import 'package:finance_tracker/app.dart';
-import 'package:finance_tracker/core/config/app_config.dart';
-import 'package:finance_tracker/shared/providers/app_config_provider.dart';
-import 'package:finance_tracker/shared/providers/theme_mode_provider.dart';
+import 'package:finance_tracker/core/errors/failure.dart';
+import 'package:finance_tracker/core/theme/app_theme.dart';
+import 'package:finance_tracker/core/widgets/app_button.dart';
+import 'package:finance_tracker/core/widgets/app_state_views.dart';
+import 'package:finance_tracker/core/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Widget tests for the shared component library.
+///
+/// These target the reusable widgets rather than whole screens: they are the
+/// pieces every feature depends on, so a regression here breaks the app
+/// everywhere at once. Screens are covered by the provider-level tests, which
+/// run far faster than pumping a full navigator.
 void main() {
-  /// Boots the real app with a test config injected through the same provider
-  /// override `main()` uses — no globals to reset between tests.
-  Future<void> pumpApp(WidgetTester tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [appConfigProvider.overrideWithValue(AppConfig.dev)],
-        child: const PocketPilotApp(),
+  Future<void> pump(WidgetTester tester, Widget child) {
+    return tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: Padding(padding: const EdgeInsets.all(16), child: child)),
       ),
     );
-    // Entry animations (flutter_animate) schedule tickers; settle them so the
-    // test does not finish with pending timers.
-    await tester.pumpAndSettle();
   }
 
-  testWidgets('renders the app shell with the branded title', (tester) async {
-    await pumpApp(tester);
+  group('AppButton', () {
+    testWidgets('invokes onPressed when enabled', (WidgetTester tester) async {
+      var taps = 0;
+      await pump(
+        tester,
+        AppButton(label: 'Save', onPressed: () => taps++),
+      );
 
-    expect(find.text('PocketPilot'), findsOneWidget);
-    expect(find.byType(MaterialApp), findsOneWidget);
+      await tester.tap(find.text('Save'));
+      expect(taps, 1);
+    });
+
+    testWidgets('swaps the label for a spinner while loading', (
+      WidgetTester tester,
+    ) async {
+      var taps = 0;
+      await pump(
+        tester,
+        AppButton(label: 'Save', isLoading: true, onPressed: () => taps++),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Save'), findsNothing);
+    });
+
+    testWidgets('blocks taps while loading so a submit cannot double-fire', (
+      WidgetTester tester,
+    ) async {
+      var taps = 0;
+      await pump(
+        tester,
+        AppButton(label: 'Save', isLoading: true, onPressed: () => taps++),
+      );
+
+      await tester.tap(find.byType(FilledButton));
+      expect(taps, 0);
+    });
+
+    testWidgets('is disabled when onPressed is null', (
+      WidgetTester tester,
+    ) async {
+      await pump(tester, const AppButton(label: 'Save', onPressed: null));
+
+      final FilledButton button = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      expect(button.onPressed, isNull);
+    });
   });
 
-  testWidgets('theme toggle flips MaterialApp into dark mode', (tester) async {
-    final container = ProviderContainer(
-      overrides: [appConfigProvider.overrideWithValue(AppConfig.dev)],
-    );
-    addTearDown(container.dispose);
+  group('AppTextField', () {
+    testWidgets('obscures a password and toggles visibility', (
+      WidgetTester tester,
+    ) async {
+      await pump(
+        tester,
+        AppTextField(
+          controller: TextEditingController(),
+          label: 'Password',
+          obscureText: true,
+        ),
+      );
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const PocketPilotApp(),
-      ),
-    );
-    await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isTrue,
+      );
 
-    expect(container.read(themeModeProvider), ThemeMode.system);
+      await tester.tap(find.byIcon(Icons.visibility_outlined));
+      await tester.pump();
 
-    container.read(themeModeProvider.notifier).toggle();
-    await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isFalse,
+      );
+    });
 
-    expect(container.read(themeModeProvider), ThemeMode.dark);
-    expect(
-      tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
-      ThemeMode.dark,
-    );
+    testWidgets('amount field rejects letters and extra decimals', (
+      WidgetTester tester,
+    ) async {
+      final TextEditingController controller = TextEditingController();
+      await pump(tester, AppTextField.amount(controller: controller));
+
+      await tester.enterText(find.byType(TextField), '12ab.999');
+      expect(controller.text, '12.99');
+    });
+
+    testWidgets('renders a server-side error', (WidgetTester tester) async {
+      await pump(
+        tester,
+        AppTextField(
+          controller: TextEditingController(),
+          errorText: 'That email is already registered',
+        ),
+      );
+
+      expect(find.text('That email is already registered'), findsOneWidget);
+    });
+  });
+
+  group('AppErrorState', () {
+    testWidgets('offers retry for a retryable failure', (
+      WidgetTester tester,
+    ) async {
+      await pump(
+        tester,
+        AppErrorState(failure: const NetworkFailure(), onRetry: () {}),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Try again'), findsOneWidget);
+      expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
+    });
+
+    testWidgets('hides retry for a failure that cannot be retried', (
+      WidgetTester tester,
+    ) async {
+      await pump(
+        tester,
+        AppErrorState(
+          failure: const ValidationFailure('Enter an amount'),
+          onRetry: () {},
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Try again'), findsNothing);
+      expect(find.text('Enter an amount'), findsOneWidget);
+    });
+  });
+
+  group('AppEmptyState', () {
+    testWidgets('renders its call to action', (WidgetTester tester) async {
+      var tapped = false;
+      await pump(
+        tester,
+        AppEmptyState(
+          title: 'Nothing here yet',
+          message: 'Add your first transaction.',
+          actionLabel: 'Add transaction',
+          onAction: () => tapped = true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.text('Add transaction'));
+      expect(tapped, isTrue);
+    });
   });
 }

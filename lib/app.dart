@@ -1,35 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'core/config/router.dart';
 import 'core/theme/app_theme.dart';
-import 'dev/design_system_preview.dart';
+import 'features/settings/presentation/providers/settings_providers.dart';
 import 'shared/providers/app_config_provider.dart';
-import 'shared/providers/theme_mode_provider.dart';
+import 'shared/providers/sync_providers.dart';
 
 /// Root widget.
 ///
-/// [PocketPilotApp] is a [ConsumerWidget] rather than a `StatelessWidget` so it
-/// can `watch` the theme mode: when the user flips dark mode anywhere in the
-/// app, only this widget rebuilds and `MaterialApp` animates between themes.
+/// A [ConsumerWidget] so it can watch the theme mode: flipping dark mode
+/// anywhere rebuilds only this widget, and `MaterialApp` animates between the
+/// two themes rather than snapping.
 ///
 /// It is deliberately thin — no business logic, no navigation rules. The
-/// router is injected in the next step; the app shell stays a composition root.
+/// router owns routing, the notifiers own state; this is a composition root.
 class PocketPilotApp extends ConsumerWidget {
   const PocketPilotApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(appConfigProvider);
-    final ThemeMode themeMode = ref.watch(themeModeProvider);
+    final GoRouter router = ref.watch(routerProvider);
+    final ThemeMode themeMode = ref.watch(persistedThemeModeProvider);
 
-    return MaterialApp(
+    // Keeps the sync coordinator alive for the app's lifetime so it can react
+    // to connectivity from any screen. Watching it here (rather than in a
+    // feature screen) is what makes "sync when back online" work globally.
+    ref.watch(syncCoordinatorProvider);
+
+    return MaterialApp.router(
       title: config.appName,
       debugShowCheckedModeBanner: !config.isProd,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
-      // TODO(router): replace with `MaterialApp.router` + goRouterProvider.
-      home: const DesignSystemPreview(),
+      routerConfig: router,
       builder: (BuildContext context, Widget? child) {
         // Clamp text scaling so extreme accessibility settings cannot break
         // the dense financial layouts, while still honouring user intent.

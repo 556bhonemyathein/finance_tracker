@@ -89,10 +89,10 @@ class TransactionListSkeleton extends StatelessWidget {
                   child: SizedBox(height: 44, width: 44),
                 ),
                 AppSpacing.md.gapW,
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const <Widget>[
+                    children: <Widget>[
                       _ShimmerBox(height: 12, width: 140, radius: 6),
                       SizedBox(height: 8),
                       _ShimmerBox(height: 10, width: 80, radius: 6),

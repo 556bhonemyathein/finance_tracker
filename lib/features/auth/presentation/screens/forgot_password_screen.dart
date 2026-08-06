@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,7 +62,8 @@ class _ForgotPasswordScreenState
         ? '?email=$email&devCode=${result.devCode}'
         : '?email=$email';
 
-    context.push('${AppRoutes.otp}$query');
+    // Fire-and-forget: the pushed route's result is not needed here.
+    unawaited(context.push('${AppRoutes.otp}$query'));
   }
 
   @override
