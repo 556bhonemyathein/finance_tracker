@@ -1,14 +1,14 @@
 import 'dart:io';
 
-import 'package:finance_tracker/core/utils/result.dart';
-import 'package:finance_tracker/features/reports/domain/report_exporter.dart';
-import 'package:finance_tracker/shared/models/category.dart';
-import 'package:finance_tracker/shared/models/enums.dart';
-import 'package:finance_tracker/shared/models/transaction.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:pocket_pilot/core/utils/result.dart';
+import 'package:pocket_pilot/features/reports/domain/report_exporter.dart';
+import 'package:pocket_pilot/shared/models/category.dart';
+import 'package:pocket_pilot/shared/models/enums.dart';
+import 'package:pocket_pilot/shared/models/transaction.dart';
 
 /// Fake `path_provider` so export can be tested without a device.
 class _FakePathProvider extends PathProviderPlatform

@@ -1,10 +1,10 @@
-import 'package:finance_tracker/core/errors/failure.dart';
-import 'package:finance_tracker/core/theme/app_theme.dart';
-import 'package:finance_tracker/core/widgets/app_button.dart';
-import 'package:finance_tracker/core/widgets/app_state_views.dart';
-import 'package:finance_tracker/core/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pocket_pilot/core/errors/failure.dart';
+import 'package:pocket_pilot/core/theme/app_theme.dart';
+import 'package:pocket_pilot/core/widgets/app_button.dart';
+import 'package:pocket_pilot/core/widgets/app_state_views.dart';
+import 'package:pocket_pilot/core/widgets/app_text_field.dart';
 
 /// Widget tests for the shared component library.
 ///

@@ -1,7 +1,7 @@
-import 'package:finance_tracker/core/extensions/date_time_extensions.dart';
-import 'package:finance_tracker/core/extensions/num_extensions.dart';
-import 'package:finance_tracker/core/extensions/string_extensions.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pocket_pilot/core/extensions/date_time_extensions.dart';
+import 'package:pocket_pilot/core/extensions/num_extensions.dart';
+import 'package:pocket_pilot/core/extensions/string_extensions.dart';
 
 void main() {
   group('NumX', () {

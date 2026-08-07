@@ -1,4 +1,4 @@
-package com.example.finance_tracker
+package app.pocketpilot
 
 import io.flutter.embedding.android.FlutterActivity
 

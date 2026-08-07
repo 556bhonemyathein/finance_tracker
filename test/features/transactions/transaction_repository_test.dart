@@ -1,16 +1,16 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:finance_tracker/core/errors/failure.dart';
-import 'package:finance_tracker/core/storage/isar_service.dart';
-import 'package:finance_tracker/core/utils/result.dart';
-import 'package:finance_tracker/features/transactions/data/transaction_repository_impl.dart';
-import 'package:finance_tracker/features/transactions/domain/transaction_repository.dart';
-import 'package:finance_tracker/shared/models/enums.dart';
-import 'package:finance_tracker/shared/models/transaction.dart';
-import 'package:finance_tracker/shared/models/transaction_query.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar_community/isar.dart';
+import 'package:pocket_pilot/core/errors/failure.dart';
+import 'package:pocket_pilot/core/storage/isar_service.dart';
+import 'package:pocket_pilot/core/utils/result.dart';
+import 'package:pocket_pilot/features/transactions/data/transaction_repository_impl.dart';
+import 'package:pocket_pilot/features/transactions/domain/transaction_repository.dart';
+import 'package:pocket_pilot/shared/models/enums.dart';
+import 'package:pocket_pilot/shared/models/transaction.dart';
+import 'package:pocket_pilot/shared/models/transaction_query.dart';
 
 /// Repository tests against a **real** Isar database in a temp directory.
 ///

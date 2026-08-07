@@ -1,15 +1,15 @@
-import 'package:finance_tracker/core/config/app_config.dart';
-import 'package:finance_tracker/core/errors/app_exception.dart';
-import 'package:finance_tracker/core/errors/failure.dart';
-import 'package:finance_tracker/core/storage/preferences_service.dart';
-import 'package:finance_tracker/core/storage/secure_storage_service.dart';
-import 'package:finance_tracker/core/utils/result.dart';
-import 'package:finance_tracker/features/auth/data/auth_local_datasource.dart';
-import 'package:finance_tracker/features/auth/data/auth_remote_datasource.dart';
-import 'package:finance_tracker/features/auth/data/auth_repository_impl.dart';
-import 'package:finance_tracker/shared/models/app_user.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:pocket_pilot/core/config/app_config.dart';
+import 'package:pocket_pilot/core/errors/app_exception.dart';
+import 'package:pocket_pilot/core/errors/failure.dart';
+import 'package:pocket_pilot/core/storage/preferences_service.dart';
+import 'package:pocket_pilot/core/storage/secure_storage_service.dart';
+import 'package:pocket_pilot/core/utils/result.dart';
+import 'package:pocket_pilot/features/auth/data/auth_local_datasource.dart';
+import 'package:pocket_pilot/features/auth/data/auth_remote_datasource.dart';
+import 'package:pocket_pilot/features/auth/data/auth_repository_impl.dart';
+import 'package:pocket_pilot/shared/models/app_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _MockLocal extends Mock implements AuthLocalDataSource {}

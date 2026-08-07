@@ -1,7 +1,7 @@
-import 'package:finance_tracker/core/errors/app_exception.dart';
-import 'package:finance_tracker/core/errors/failure.dart';
-import 'package:finance_tracker/core/utils/result.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pocket_pilot/core/errors/app_exception.dart';
+import 'package:pocket_pilot/core/errors/failure.dart';
+import 'package:pocket_pilot/core/utils/result.dart';
 
 void main() {
   group('Result', () {

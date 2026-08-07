@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/extensions.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -21,22 +22,18 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Container(
+            // The launcher artwork itself, so the icon the user tapped and the
+            // mark that greets them are the same image. The gradient and the
+            // rounded corners are baked into the asset.
+            Image.asset(
+                  AppAssets.logo,
                   height: 92,
                   width: 92,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: context.finance.balanceGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                  ),
-                  child: const Icon(
-                    Icons.savings_rounded,
-                    color: Colors.white,
-                    size: 44,
-                  ),
+                  // The source is 1024² for the icon pipeline; decoding it at
+                  // display size keeps ~4MB of pixels out of the image cache.
+                  cacheHeight: 276,
+                  cacheWidth: 276,
+                  filterQuality: FilterQuality.medium,
                 )
                 .animate()
                 .scaleXY(begin: 0.6, duration: 550.ms, curve: Curves.easeOutBack)

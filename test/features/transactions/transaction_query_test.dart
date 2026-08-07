@@ -1,10 +1,10 @@
-import 'package:finance_tracker/core/storage/preferences_service.dart';
-import 'package:finance_tracker/features/transactions/presentation/providers/transaction_providers.dart';
-import 'package:finance_tracker/shared/models/enums.dart';
-import 'package:finance_tracker/shared/models/transaction_query.dart';
-import 'package:finance_tracker/shared/providers/core_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pocket_pilot/core/storage/preferences_service.dart';
+import 'package:pocket_pilot/features/transactions/presentation/providers/transaction_providers.dart';
+import 'package:pocket_pilot/shared/models/enums.dart';
+import 'package:pocket_pilot/shared/models/transaction_query.dart';
+import 'package:pocket_pilot/shared/providers/core_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Tests for the query notifier — the state machine behind search, filters,
