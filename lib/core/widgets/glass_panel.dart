@@ -81,14 +81,16 @@ class AppCard extends StatelessWidget {
 
     return Material(
       color: color ?? context.theme.cardTheme.color,
-      borderRadius: radius,
       clipBehavior: Clip.antiAlias,
-      shape: showBorder
-          ? RoundedRectangleBorder(
-              borderRadius: radius,
-              side: BorderSide(color: context.colors.outlineVariant),
-            )
-          : null,
+      // `Material` asserts that `shape` and `borderRadius` are never both set,
+      // so the radius travels inside the shape and the border becomes a
+      // zero-width side rather than a null shape.
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: showBorder
+            ? BorderSide(color: context.colors.outlineVariant)
+            : BorderSide.none,
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,

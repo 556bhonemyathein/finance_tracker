@@ -157,7 +157,10 @@ class _AvatarButton extends ConsumerWidget {
     return GestureDetector(
       onTap: () => context.go(AppRoutes.profile),
       child: Hero(
-        tag: 'profile-avatar',
+        // Distinct from the profile header's avatar tag: `indexedStack` keeps
+        // every branch mounted, so both would sit in the shell's subtree at
+        // once and a root-navigator flight (sign-out) would find the tag twice.
+        tag: 'dashboard-avatar',
         child: CircleAvatar(
           radius: 18,
           backgroundColor: context.colors.primaryContainer,
@@ -241,42 +244,49 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Expanded(
-          child: StatCard(
-            label: 'Income',
-            amount: summary.income,
-            currencyCode: currencyCode,
-            color: context.finance.income,
-            icon: Icons.south_west_rounded,
+    // `stretch` makes the three cards share a height — the "Saved" card is
+    // taller when it carries a caption, and ragged card bottoms look broken.
+    // But stretch resolves to a *tight* cross-axis constraint taken from the
+    // incoming maxHeight, which is unbounded inside a sliver. `IntrinsicHeight`
+    // measures the tallest card first and hands the Row a bounded height.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Expanded(
+            child: StatCard(
+              label: 'Income',
+              amount: summary.income,
+              currencyCode: currencyCode,
+              color: context.finance.income,
+              icon: Icons.south_west_rounded,
+            ),
           ),
-        ),
-        AppSpacing.md.gapW,
-        Expanded(
-          child: StatCard(
-            label: 'Expenses',
-            amount: summary.expense,
-            currencyCode: currencyCode,
-            color: context.finance.expense,
-            icon: Icons.north_east_rounded,
+          AppSpacing.md.gapW,
+          Expanded(
+            child: StatCard(
+              label: 'Expenses',
+              amount: summary.expense,
+              currencyCode: currencyCode,
+              color: context.finance.expense,
+              icon: Icons.north_east_rounded,
+            ),
           ),
-        ),
-        AppSpacing.md.gapW,
-        Expanded(
-          child: StatCard(
-            label: 'Saved',
-            amount: summary.balance,
-            currencyCode: currencyCode,
-            color: context.finance.savings,
-            icon: Icons.savings_outlined,
-            caption: summary.savingsRate > 0
-                ? '${summary.savingsRate.toPercent()} of income'
-                : null,
+          AppSpacing.md.gapW,
+          Expanded(
+            child: StatCard(
+              label: 'Saved',
+              amount: summary.balance,
+              currencyCode: currencyCode,
+              color: context.finance.savings,
+              icon: Icons.savings_outlined,
+              caption: summary.savingsRate > 0
+                  ? '${summary.savingsRate.toPercent()} of income'
+                  : null,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

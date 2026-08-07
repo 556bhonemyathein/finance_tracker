@@ -136,14 +136,19 @@ class _GlassNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
               for (int i = 0; i < items.length; i++)
-                _NavButton(
-                  item: items[i],
-                  isSelected: shell.currentIndex == i,
-                  // `initialLocation: true` on a re-tap pops the tab back to
-                  // its root — the standard "tap the active tab to go home".
-                  onTap: () => shell.goBranch(
-                    i,
-                    initialLocation: i == shell.currentIndex,
+                // Loose `Flexible` rather than `Expanded`: the buttons keep
+                // hugging their content where there is room, but can never
+                // demand more than their quarter of a narrow bar.
+                Flexible(
+                  child: _NavButton(
+                    item: items[i],
+                    isSelected: shell.currentIndex == i,
+                    // `initialLocation: true` on a re-tap pops the tab back to
+                    // its root — the standard "tap the active tab to go home".
+                    onTap: () => shell.goBranch(
+                      i,
+                      initialLocation: i == shell.currentIndex,
+                    ),
                   ),
                 ),
             ],
@@ -182,7 +187,7 @@ class _NavButton extends StatelessWidget {
           duration: 220.ms,
           curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
+            horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
@@ -204,9 +209,16 @@ class _NavButton extends StatelessWidget {
                 ),
               ),
               AppSpacing.xxs.gapH,
-              Text(
-                item.label,
-                style: context.text.labelSmall?.copyWith(color: color),
+              // Scales the label down instead of overflowing when the user
+              // has bumped their system text size.
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  item.label,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: context.text.labelSmall?.copyWith(color: color),
+                ),
               ),
             ],
           ),
