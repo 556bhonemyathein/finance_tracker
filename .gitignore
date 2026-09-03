@@ -46,3 +46,6 @@ app.*.map.json
 
 # Vendored Isar native library for tests (see README)
 .isar/
+
+# FVM Version Cache
+.fvm/

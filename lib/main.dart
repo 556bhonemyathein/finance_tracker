@@ -42,16 +42,10 @@ Future<void> main() async {
       final IsarService isar = await IsarService.open();
       final PreferencesService preferences = await PreferencesService.create();
 
-      await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
+      await SystemChrome.setPreferredOrientations(<DeviceOrientation>[DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
       SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Colors.transparent,
-        ),
+        const SystemUiOverlayStyle(statusBarColor: Colors.transparent, systemNavigationBarColor: Colors.transparent),
       );
 
       FlutterError.onError = (FlutterErrorDetails details) {
@@ -68,19 +62,12 @@ Future<void> main() async {
           isarServiceProvider.overrideWithValue(isar),
           preferencesServiceProvider.overrideWithValue(preferences),
         ],
-        observers: config.enableLogging
-            ? <ProviderObserver>[_LoggingProviderObserver()]
-            : const <ProviderObserver>[],
+        observers: config.enableLogging ? <ProviderObserver>[_LoggingProviderObserver()] : const <ProviderObserver>[],
       );
 
       await _runStartupTasks(container);
 
-      runApp(
-        UncontrolledProviderScope(
-          container: container,
-          child: const PocketPilotApp(),
-        ),
-      );
+      runApp(UncontrolledProviderScope(container: container, child: const PocketPilotApp()));
     },
     (Object error, StackTrace stack) {
       AppLogger.e('Uncaught zone error', error, stack);
@@ -112,11 +99,7 @@ Future<void> _runStartupTasks(ProviderContainer container) async {
 /// statement to feature code.
 final class _LoggingProviderObserver extends ProviderObserver {
   @override
-  void didUpdateProvider(
-    ProviderObserverContext context,
-    Object? previousValue,
-    Object? newValue,
-  ) {
+  void didUpdateProvider(ProviderObserverContext context, Object? previousValue, Object? newValue) {
     AppLogger.d(
       '[riverpod] ${context.provider.name ?? context.provider.runtimeType} '
       '=> $newValue',
@@ -124,11 +107,7 @@ final class _LoggingProviderObserver extends ProviderObserver {
   }
 
   @override
-  void providerDidFail(
-    ProviderObserverContext context,
-    Object error,
-    StackTrace stackTrace,
-  ) {
+  void providerDidFail(ProviderObserverContext context, Object error, StackTrace stackTrace) {
     AppLogger.e(
       '[riverpod] ${context.provider.name ?? context.provider.runtimeType} '
       'failed',
