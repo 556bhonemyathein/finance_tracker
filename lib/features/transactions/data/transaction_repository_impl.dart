@@ -11,17 +11,6 @@ import '../../../shared/models/transaction.dart';
 import '../../../shared/models/transaction_query.dart';
 import '../domain/transaction_repository.dart';
 
-/// Offline-first transaction store.
-///
-/// Design decisions worth calling out:
-///   * **Isar is the source of truth.** Every write lands locally and is
-///     marked pending; the network is a background concern, never a blocker.
-///   * **Filtering is split.** Everything Isar can index (date range, type,
-///     category, amount) runs in the database; free-text search runs in Dart
-///     because Isar's `contains` is case-sensitive and we want fuzzy,
-///     multi-field matching.
-///   * **Soft deletes.** Rows are tombstoned so undo is instant and the
-///     deletion can still be replayed to the server.
 class TransactionRepositoryImpl implements TransactionRepository {
   TransactionRepositoryImpl(this._isar);
 
@@ -38,8 +27,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<Result<TransactionPage>> getPage(TransactionQuery query) =>
-      guard(() => _queryPage(query));
+  Future<Result<TransactionPage>> getPage(TransactionQuery query) => guard(() => _queryPage(query));
 
   Future<TransactionPage> _queryPage(TransactionQuery query) async {
     List<Transaction> matches = await _matching(query);
@@ -49,12 +37,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
     final int start = query.page * query.pageSize;
     if (start >= total) {
-      return TransactionPage(
-        items: const <Transaction>[],
-        total: total,
-        page: query.page,
-        hasMore: false,
-      );
+      return TransactionPage(items: const <Transaction>[], total: total, page: query.page, hasMore: false);
     }
     final int end = (start + query.pageSize).clamp(0, total);
 
@@ -70,80 +53,57 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   /// Applies indexed filters in Isar, then the free-text pass in Dart.
   Future<List<Transaction>> _matching(TransactionQuery query) async {
-    QueryBuilder<TransactionEntity, TransactionEntity, QAfterFilterCondition>
-    builder = _isar.transactions.filter().isDeletedEqualTo(false);
+    QueryBuilder<TransactionEntity, TransactionEntity, QAfterFilterCondition> builder = _isar.transactions.filter().isDeletedEqualTo(false);
 
     if (query.from != null) {
-      builder = builder.and().dateGreaterThan(
-        query.from!.startOfDay,
-        include: true,
-      );
+      builder = builder.and().dateGreaterThan(query.from!.startOfDay, include: true);
     }
     if (query.to != null) {
       builder = builder.and().dateLessThan(query.to!.endOfDay, include: true);
     }
     if (query.minAmount != null) {
-      builder = builder.and().amountGreaterThan(
-        query.minAmount!,
-        include: true,
-      );
+      builder = builder.and().amountGreaterThan(query.minAmount!, include: true);
     }
     if (query.maxAmount != null) {
       builder = builder.and().amountLessThan(query.maxAmount!, include: true);
     }
     if (query.types.isNotEmpty) {
-      builder = builder
-          .and()
-          .anyOf<
-            TransactionType,
-            QAfterFilterCondition
-          >(query.types, (q, TransactionType type) => q.typeEqualTo(type));
+      builder = builder.and().anyOf<TransactionType, QAfterFilterCondition>(query.types, (q, TransactionType type) => q.typeEqualTo(type));
     }
     if (query.categoryIds.isNotEmpty) {
-      builder = builder
-          .and()
-          .anyOf<
-            String,
-            QAfterFilterCondition
-          >(query.categoryIds, (q, String id) => q.categoryIdEqualTo(id));
+      builder = builder.and().anyOf<String, QAfterFilterCondition>(query.categoryIds, (q, String id) => q.categoryIdEqualTo(id));
     }
 
     final List<TransactionEntity> rows = await builder.findAll();
-    final Iterable<Transaction> domain = rows.map(
-      (TransactionEntity e) => e.toDomain(),
-    );
+    final Iterable<Transaction> domain = rows.map((TransactionEntity e) => e.toDomain());
 
     final String search = query.search.trim().toLowerCase();
     if (search.isEmpty) return domain.toList();
 
-    return domain
-        .where((Transaction t) => t.searchHaystack.contains(search))
-        .toList();
+    return domain.where((Transaction t) => t.searchHaystack.contains(search)).toList();
   }
 
   List<Transaction> _sorted(List<Transaction> items, TransactionSort sort) {
     final List<Transaction> copy = List<Transaction>.of(items);
-    copy.sort((Transaction a, Transaction b) => switch (sort) {
-      TransactionSort.dateDesc => b.date.compareTo(a.date),
-      TransactionSort.dateAsc => a.date.compareTo(b.date),
-      TransactionSort.amountDesc => b.amount.compareTo(a.amount),
-      TransactionSort.amountAsc => a.amount.compareTo(b.amount),
-    });
+    copy.sort(
+      (Transaction a, Transaction b) => switch (sort) {
+        TransactionSort.dateDesc => b.date.compareTo(a.date),
+        TransactionSort.dateAsc => a.date.compareTo(b.date),
+        TransactionSort.amountDesc => b.amount.compareTo(a.amount),
+        TransactionSort.amountAsc => a.amount.compareTo(b.amount),
+      },
+    );
     return copy;
   }
 
   @override
   Future<Result<Transaction?>> getById(String id) => guard(() async {
-    final TransactionEntity? row =
-        await _isar.transactions.filter().uidEqualTo(id).findFirst();
+    final TransactionEntity? row = await _isar.transactions.filter().uidEqualTo(id).findFirst();
     return row?.toDomain();
   });
 
   @override
-  Stream<TransactionSummary> watchSummary({
-    required DateTime from,
-    required DateTime to,
-  }) async* {
+  Stream<TransactionSummary> watchSummary({required DateTime from, required DateTime to}) async* {
     Future<TransactionSummary> read() => _summary(from: from, to: to);
 
     yield await read();
@@ -152,10 +112,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
     }
   }
 
-  Future<TransactionSummary> _summary({
-    required DateTime from,
-    required DateTime to,
-  }) async {
+  Future<TransactionSummary> _summary({required DateTime from, required DateTime to}) async {
     final List<TransactionEntity> rows = await _inRange(from, to);
 
     double income = 0;
@@ -172,27 +129,16 @@ class TransactionRepositoryImpl implements TransactionRepository {
       }
     }
 
-    return TransactionSummary(
-      income: income,
-      expense: expense,
-      transfers: transfers,
-      count: rows.length,
-    );
+    return TransactionSummary(income: income, expense: expense, transfers: transfers, count: rows.length);
   }
 
   @override
-  Future<Result<Map<String, double>>> totalsByCategory({
-    required DateTime from,
-    required DateTime to,
-    required bool expensesOnly,
-  }) => guard(() async {
+  Future<Result<Map<String, double>>> totalsByCategory({required DateTime from, required DateTime to, required bool expensesOnly}) => guard(() async {
     final List<TransactionEntity> rows = await _inRange(from, to);
     final Map<String, double> totals = <String, double>{};
 
     for (final TransactionEntity row in rows) {
-      final bool wanted = expensesOnly
-          ? row.type == TransactionType.expense
-          : row.type == TransactionType.income;
+      final bool wanted = expensesOnly ? row.type == TransactionType.expense : row.type == TransactionType.income;
       if (!wanted) continue;
       totals[row.categoryId] = (totals[row.categoryId] ?? 0) + row.amount;
     }
@@ -200,119 +146,78 @@ class TransactionRepositoryImpl implements TransactionRepository {
     // Sorted descending so the chart legend and the "top categories" list are
     // already in the order the UI wants to render them.
     final List<MapEntry<String, double>> sorted = totals.entries.toList()
-      ..sort(
-        (MapEntry<String, double> a, MapEntry<String, double> b) =>
-            b.value.compareTo(a.value),
-      );
+      ..sort((MapEntry<String, double> a, MapEntry<String, double> b) => b.value.compareTo(a.value));
     return Map<String, double>.fromEntries(sorted);
   });
 
   @override
-  Future<Result<List<({DateTime day, double income, double expense})>>>
-  dailyTotals({required DateTime from, required DateTime to}) =>
+  Future<Result<List<({DateTime day, double income, double expense})>>> dailyTotals({required DateTime from, required DateTime to}) =>
       guard(() async {
         final List<TransactionEntity> rows = await _inRange(from, to);
 
-        final Map<DateTime, ({double income, double expense})> byDay =
-            <DateTime, ({double income, double expense})>{};
+        final Map<DateTime, ({double income, double expense})> byDay = <DateTime, ({double income, double expense})>{};
 
         for (final TransactionEntity row in rows) {
           final DateTime day = row.date.dateOnly;
-          final ({double income, double expense}) current =
-              byDay[day] ?? (income: 0, expense: 0);
+          final ({double income, double expense}) current = byDay[day] ?? (income: 0, expense: 0);
           byDay[day] = switch (row.type) {
-            TransactionType.income => (
-              income: current.income + row.amount,
-              expense: current.expense,
-            ),
-            TransactionType.expense => (
-              income: current.income,
-              expense: current.expense + row.amount,
-            ),
+            TransactionType.income => (income: current.income + row.amount, expense: current.expense),
+            TransactionType.expense => (income: current.income, expense: current.expense + row.amount),
             TransactionType.transfer => current,
           };
         }
 
         // Zero-fill: a chart with gaps where nothing happened reads as missing
         // data rather than as a quiet day.
-        final List<({DateTime day, double income, double expense})> series =
-            <({DateTime day, double income, double expense})>[];
-        for (
-          DateTime day = from.dateOnly;
-          !day.isAfter(to.dateOnly);
-          day = day.add(const Duration(days: 1))
-        ) {
-          final ({double income, double expense}) totals =
-              byDay[day] ?? (income: 0, expense: 0);
-          series.add((
-            day: day,
-            income: totals.income,
-            expense: totals.expense,
-          ));
+        final List<({DateTime day, double income, double expense})> series = <({DateTime day, double income, double expense})>[];
+        for (DateTime day = from.dateOnly; !day.isAfter(to.dateOnly); day = day.add(const Duration(days: 1))) {
+          final ({double income, double expense}) totals = byDay[day] ?? (income: 0, expense: 0);
+          series.add((day: day, income: totals.income, expense: totals.expense));
         }
         return series;
       });
 
   Future<List<TransactionEntity>> _inRange(DateTime from, DateTime to) =>
-      _isar.transactions
-          .filter()
-          .isDeletedEqualTo(false)
-          .and()
-          .dateBetween(from.startOfDay, to.endOfDay)
-          .findAll();
+      _isar.transactions.filter().isDeletedEqualTo(false).and().dateBetween(from.startOfDay, to.endOfDay).findAll();
 
   // ── Writes ──────────────────────────────────────────────────────────────────
 
   @override
-  Future<Result<Transaction>> create(Transaction transaction) =>
-      guard(() async {
-        _validate(transaction);
+  Future<Result<Transaction>> create(Transaction transaction) => guard(() async {
+    _validate(transaction);
 
-        final DateTime now = DateTime.now();
-        final Transaction toSave = transaction.copyWith(
-          amount: transaction.amount.abs(),
-          createdAt: transaction.createdAt ?? now,
-          updatedAt: now,
-          syncStatus: SyncStatus.pendingCreate,
-        );
-        await _isar.isar.writeTxn(
-          () => _isar.transactions.put(toSave.toEntity()),
-        );
-        return toSave;
-      });
+    final DateTime now = DateTime.now();
+    final Transaction toSave = transaction.copyWith(
+      amount: transaction.amount.abs(),
+      createdAt: transaction.createdAt ?? now,
+      updatedAt: now,
+      syncStatus: SyncStatus.pendingCreate,
+    );
+    await _isar.isar.writeTxn(() => _isar.transactions.put(toSave.toEntity()));
+    return toSave;
+  });
 
   @override
-  Future<Result<Transaction>> update(Transaction transaction) =>
-      guard(() async {
-        _validate(transaction);
+  Future<Result<Transaction>> update(Transaction transaction) => guard(() async {
+    _validate(transaction);
 
-        final TransactionEntity? existing = await _isar.transactions
-            .filter()
-            .uidEqualTo(transaction.id)
-            .findFirst();
-        if (existing == null) {
-          throw const NotFoundException('Transaction not found');
-        }
+    final TransactionEntity? existing = await _isar.transactions.filter().uidEqualTo(transaction.id).findFirst();
+    if (existing == null) {
+      throw const NotFoundException('Transaction not found');
+    }
 
-        final Transaction toSave = transaction.copyWith(
-          amount: transaction.amount.abs(),
-          updatedAt: DateTime.now(),
-          syncStatus: existing.syncStatus == SyncStatus.pendingCreate
-              ? SyncStatus.pendingCreate
-              : SyncStatus.pendingUpdate,
-        );
-        await _isar.isar.writeTxn(
-          () => _isar.transactions.put(
-            toSave.toEntity(isarId: existing.isarId),
-          ),
-        );
-        return toSave;
-      });
+    final Transaction toSave = transaction.copyWith(
+      amount: transaction.amount.abs(),
+      updatedAt: DateTime.now(),
+      syncStatus: existing.syncStatus == SyncStatus.pendingCreate ? SyncStatus.pendingCreate : SyncStatus.pendingUpdate,
+    );
+    await _isar.isar.writeTxn(() => _isar.transactions.put(toSave.toEntity(isarId: existing.isarId)));
+    return toSave;
+  });
 
   @override
   Future<Result<void>> delete(String id) => guard(() async {
-    final TransactionEntity? row =
-        await _isar.transactions.filter().uidEqualTo(id).findFirst();
+    final TransactionEntity? row = await _isar.transactions.filter().uidEqualTo(id).findFirst();
     if (row == null) throw const NotFoundException('Transaction not found');
 
     await _isar.isar.writeTxn(() async {
@@ -332,8 +237,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<Result<void>> restore(String id) => guard(() async {
-    final TransactionEntity? row =
-        await _isar.transactions.filter().uidEqualTo(id).findFirst();
+    final TransactionEntity? row = await _isar.transactions.filter().uidEqualTo(id).findFirst();
     if (row == null) throw const NotFoundException('Transaction not found');
 
     await _isar.isar.writeTxn(
@@ -378,13 +282,16 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
         if (!exists) {
           created.add(
-            template.toDomain().copyWith(
-              id: '${template.uid}-${next.millisecondsSinceEpoch}',
-              date: next,
-              createdAt: now,
-              updatedAt: now,
-              syncStatus: SyncStatus.pendingCreate,
-            ).toEntity(),
+            template
+                .toDomain()
+                .copyWith(
+                  id: '${template.uid}-${next.millisecondsSinceEpoch}',
+                  date: next,
+                  createdAt: now,
+                  updatedAt: now,
+                  syncStatus: SyncStatus.pendingCreate,
+                )
+                .toEntity(),
           );
         }
         next = template.recurrence.next(next);
@@ -402,11 +309,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<Result<List<Transaction>>> pendingSync() => guard(() async {
-    final List<TransactionEntity> rows = await _isar.transactions
-        .filter()
-        .not()
-        .syncStatusEqualTo(SyncStatus.synced)
-        .findAll();
+    final List<TransactionEntity> rows = await _isar.transactions.filter().not().syncStatusEqualTo(SyncStatus.synced).findAll();
     return rows.map((TransactionEntity e) => e.toDomain()).toList();
   });
 
@@ -414,8 +317,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<Result<void>> markSynced(Iterable<String> ids) => guard(() async {
     await _isar.isar.writeTxn(() async {
       for (final String id in ids) {
-        final TransactionEntity? row =
-            await _isar.transactions.filter().uidEqualTo(id).findFirst();
+        final TransactionEntity? row = await _isar.transactions.filter().uidEqualTo(id).findFirst();
         if (row == null) continue;
 
         if (row.syncStatus == SyncStatus.pendingDelete) {
@@ -431,26 +333,15 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<Result<List<Transaction>>> exportAll() => guard(() async {
-    final List<TransactionEntity> rows = await _isar.transactions
-        .filter()
-        .isDeletedEqualTo(false)
-        .sortByDateDesc()
-        .findAll();
+    final List<TransactionEntity> rows = await _isar.transactions.filter().isDeletedEqualTo(false).sortByDateDesc().findAll();
     return rows.map((TransactionEntity e) => e.toDomain()).toList();
   });
 
   @override
-  Future<Result<int>> importAll(List<Transaction> transactions) =>
-      guard(() async {
-        await _isar.isar.writeTxn(
-          () => _isar.transactions.putAll(
-            transactions
-                .map((Transaction t) => t.toEntity())
-                .toList(growable: false),
-          ),
-        );
-        return transactions.length;
-      });
+  Future<Result<int>> importAll(List<Transaction> transactions) => guard(() async {
+    await _isar.isar.writeTxn(() => _isar.transactions.putAll(transactions.map((Transaction t) => t.toEntity()).toList(growable: false)));
+    return transactions.length;
+  });
 
   /// Business rules that must hold no matter which screen wrote the row.
   /// Enforcing them here (rather than only in the form) means an import or a
@@ -472,8 +363,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
         },
       );
     }
-    if (transaction.type == TransactionType.transfer &&
-        (transaction.transferTo ?? '').trim().isEmpty) {
+    if (transaction.type == TransactionType.transfer && (transaction.transferTo ?? '').trim().isEmpty) {
       throw const ValidationException(
         'Transfers need a destination',
         fieldErrors: <String, List<String>>{
