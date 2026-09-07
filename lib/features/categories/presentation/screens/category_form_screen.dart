@@ -12,8 +12,8 @@ import '../../../../core/widgets/app_feedback.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/glass_panel.dart';
 import '../../../../shared/models/category.dart';
+import '../../../../shared/models/category_icons.dart';
 import '../../../../shared/models/enums.dart';
-import '../../data/default_categories.dart';
 import '../providers/category_providers.dart';
 
 /// Create or edit a category, with icon and colour pickers.
@@ -31,7 +31,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _name = TextEditingController();
 
-  late int _iconCodePoint = DefaultCategories.pickerIcons.first.codePoint;
+  late int _iconCodePoint = CategoryIcons.pickerIcons.first.codePoint;
   late int _colorValue = AppColors.categorySwatches.first.toARGB32();
   CategoryKind _kind = CategoryKind.expense;
 
@@ -118,10 +118,7 @@ class _CategoryFormScreenState extends ConsumerState<CategoryFormScreen> {
     }
 
     final Color color = Color(_colorValue);
-    // Runtime-selected icon — see the note on `Category.icon` about
-    // `--no-tree-shake-icons`.
-    // ignore: non_const_argument_for_const_parameter
-    final IconData icon = IconData(_iconCodePoint, fontFamily: 'MaterialIcons');
+    final IconData icon = CategoryIcons.resolve(_iconCodePoint);
 
     return Scaffold(
       appBar: AppBar(
@@ -281,7 +278,7 @@ class _IconPicker extends StatelessWidget {
         spacing: AppSpacing.sm,
         runSpacing: AppSpacing.sm,
         children: <Widget>[
-          for (final IconData icon in DefaultCategories.pickerIcons)
+          for (final IconData icon in CategoryIcons.pickerIcons)
             GestureDetector(
               onTap: () => onSelected(icon.codePoint),
               child: AnimatedContainer(

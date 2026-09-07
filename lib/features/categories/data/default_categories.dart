@@ -69,40 +69,4 @@ abstract final class DefaultCategories {
       make('Other', Icons.more_horiz_rounded, 0xFF64748B, CategoryKind.both),
     ];
   }
-
-  /// Icons offered by the category icon picker.
-  static const List<IconData> pickerIcons = <IconData>[
-    Icons.restaurant_rounded,
-    Icons.local_cafe_outlined,
-    Icons.local_grocery_store_outlined,
-    Icons.shopping_bag_outlined,
-    Icons.directions_bus_filled_outlined,
-    Icons.local_gas_station_outlined,
-    Icons.directions_car_outlined,
-    Icons.flight_takeoff_rounded,
-    Icons.home_outlined,
-    Icons.bed_outlined,
-    Icons.receipt_long_outlined,
-    Icons.bolt_outlined,
-    Icons.wifi_rounded,
-    Icons.phone_iphone_rounded,
-    Icons.favorite_outline_rounded,
-    Icons.fitness_center_rounded,
-    Icons.medical_services_outlined,
-    Icons.school_outlined,
-    Icons.menu_book_outlined,
-    Icons.movie_outlined,
-    Icons.sports_esports_outlined,
-    Icons.music_note_outlined,
-    Icons.pets_outlined,
-    Icons.child_care_outlined,
-    Icons.card_giftcard_rounded,
-    Icons.payments_outlined,
-    Icons.savings_outlined,
-    Icons.trending_up_rounded,
-    Icons.laptop_mac_outlined,
-    Icons.work_outline_rounded,
-    Icons.build_outlined,
-    Icons.more_horiz_rounded,
-  ];
 }

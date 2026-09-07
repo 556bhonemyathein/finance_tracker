@@ -27,12 +27,14 @@ flutter run --dart-define=FLAVOR=prod
 ### Release builds
 
 ```bash
-flutter build apk --release --no-tree-shake-icons
+flutter build apk --release
 ```
 
-`--no-tree-shake-icons` is required: the category icon picker builds `IconData`
-from a runtime code point, which the icon tree-shaker cannot analyse. This is
-the standard trade-off for any app with a user-facing icon picker.
+Categories persist their icon as a code point, but it is resolved through the
+constant catalogue in `lib/shared/models/category_icons.dart` rather than by
+calling `IconData(...)` at runtime — so icon tree-shaking works and no
+`--no-tree-shake-icons` flag is needed. Offer a new icon by adding it to
+`CategoryIcons.pickerIcons`.
 
 ---
 

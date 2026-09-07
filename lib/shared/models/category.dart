@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'category_icons.dart';
 import 'enums.dart';
 
 part 'category.freezed.dart';
@@ -33,12 +34,9 @@ abstract class Category with _$Category {
   factory Category.fromJson(Map<String, dynamic> json) =>
       _$CategoryFromJson(json);
 
-  /// Icons are chosen at runtime by the category picker, so the code point
-  /// cannot be a compile-time constant. Release builds must therefore be made
-  /// with `--no-tree-shake-icons` (see README) — the standard trade-off for any
-  /// app with a user-facing icon picker.
-  // ignore: non_const_argument_for_const_parameter
-  IconData get icon => IconData(iconCodePoint, fontFamily: 'MaterialIcons');
+  /// Resolved against [CategoryIcons] rather than built with `IconData(...)`:
+  /// a runtime invocation would defeat icon tree-shaking in release builds.
+  IconData get icon => CategoryIcons.resolve(iconCodePoint);
 
   Color get color => Color(colorValue);
 
@@ -46,7 +44,7 @@ abstract class Category with _$Category {
   static const Category unknown = Category(
     id: '__unknown__',
     name: 'Uncategorised',
-    iconCodePoint: 0xe332, // Icons.help_outline
+    iconCodePoint: 0xe332, // CategoryIcons.fallback (Icons.help_outline)
     colorValue: 0xFF64748B,
     isDefault: true,
     syncStatus: SyncStatus.synced,
