@@ -21,7 +21,7 @@ class PocketPilotApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: config.appName,
-      debugShowCheckedModeBanner: !config.isProd,
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
